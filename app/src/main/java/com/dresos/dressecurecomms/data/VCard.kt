@@ -8,18 +8,27 @@ object VCard {
     fun parse(text: String): List<ContactsStore.Contact> {
         val out = ArrayList<ContactsStore.Contact>()
         var name = ""
-        var number = ""
+        val numbers = ArrayList<ContactsStore.PhoneNumber>()
         var email = ""
         var inCard = false
         for (raw in unfold(text)) {
             val line = raw.trim()
             when {
                 line.equals("BEGIN:VCARD", true) -> {
-                    inCard = true; name = ""; number = ""; email = ""
+                    inCard = true; name = ""; numbers.clear(); email = ""
                 }
                 line.equals("END:VCARD", true) -> {
-                    if (number.isNotEmpty()) {
-                        out.add(ContactsStore.Contact(if (name.isNotEmpty()) name else number, number, email))
+                    if (numbers.isNotEmpty()) {
+                        val primary = numbers.first()
+                        out.add(
+                            ContactsStore.Contact(
+                                if (name.isNotEmpty()) name else primary.number,
+                                primary.number,
+                                email,
+                                primary.type,
+                                numbers.drop(1)
+                            )
+                        )
                     }
                     inCard = false
                 }
@@ -39,7 +48,9 @@ object VCard {
                             val built = ((parts.getOrNull(1) ?: "") + " " + (parts.getOrNull(0) ?: "")).trim()
                             if (built.isNotEmpty()) name = built
                         }
-                        field == "TEL" && number.isEmpty() -> number = value
+                        field == "TEL" && value.isNotEmpty() ->
+                            if (numbers.none { it.number == value })
+                                numbers.add(ContactsStore.PhoneNumber(value, telType(params)))
                         field == "EMAIL" && email.isEmpty() -> email = value
                     }
                 }
@@ -54,11 +65,35 @@ object VCard {
             sb.append("BEGIN:VCARD\r\n")
             sb.append("VERSION:3.0\r\n")
             sb.append("FN:").append(escape(c.name)).append("\r\n")
-            sb.append("TEL;TYPE=CELL:").append(escape(c.number)).append("\r\n")
+            for (pn in c.numbers) {
+                sb.append("TEL;TYPE=").append(telParam(pn.type)).append(":")
+                    .append(escape(pn.number)).append("\r\n")
+            }
             if (c.email.isNotEmpty()) sb.append("EMAIL:").append(escape(c.email)).append("\r\n")
             sb.append("END:VCARD\r\n")
         }
         return sb.toString()
+    }
+
+    /** Map a vCard TEL TYPE parameter list to one of ContactsStore.TYPES. */
+    private fun telType(params: List<String>): String {
+        val joined = params.joinToString(";").uppercase()
+        return when {
+            joined.contains("FAX") -> "Fax"
+            joined.contains("CELL") || joined.contains("MOBILE") -> "Mobile"
+            joined.contains("WORK") -> "Work"
+            joined.contains("HOME") -> "Home"
+            else -> "Other"
+        }
+    }
+
+    /** Map one of ContactsStore.TYPES back to a vCard TEL TYPE parameter. */
+    private fun telParam(type: String): String = when (type) {
+        "Mobile" -> "CELL"
+        "Home" -> "HOME"
+        "Work" -> "WORK"
+        "Fax" -> "FAX"
+        else -> "VOICE"
     }
 
     private fun unfold(text: String): List<String> {

@@ -69,7 +69,7 @@ object Contacts {
     private fun sameNumber(a: String, b: String): Boolean = PhoneKey.same(a, b)
 
     private fun fromStore(stored: List<ContactsStore.Contact>, number: String): String? =
-        stored.firstOrNull { sameNumber(it.number, number) }?.name
+        stored.firstOrNull { c -> c.numbers.any { sameNumber(it.number, number) } }?.name
 
     private fun fromSystem(ctx: Context, number: String): String? = try {
         val uri = Uri.withAppendedPath(ContactsContract.PhoneLookup.CONTENT_FILTER_URI, Uri.encode(number))

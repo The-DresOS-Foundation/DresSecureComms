@@ -131,9 +131,11 @@
             </intent-filter>
         </receiver>
 
-        <!-- Incoming MMS download (WAP push handled by the send library) -->
+        <!-- Incoming MMS download. Our own receiver handles the WAP push instead of the send
+             library's com.android.mms.transaction.PushReceiver, which crashes on Android 16 by
+             calling a framework SqliteWrapper.query overload that no longer exists. -->
         <receiver
-            android:name="com.android.mms.transaction.PushReceiver"
+            android:name=".MmsPushReceiver"
             android:permission="android.permission.BROADCAST_WAP_PUSH"
             android:exported="true">
             <intent-filter>

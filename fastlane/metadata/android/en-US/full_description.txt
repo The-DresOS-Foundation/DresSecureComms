@@ -39,5 +39,5 @@ Website: https://dresos.org
 
 Donate: https://ko-fi.com/dresos
 
-Source: https://github.com/DresOperatingSystems/DresSecureComms
+Source: https://github.com/The-DresOS-Foundation/DresSecureComms
 

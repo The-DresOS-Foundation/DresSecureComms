@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.9.2
+
+### Added
+- Contacts can now hold more than one number. Each number has its own type — Mobile, Home, Work, Fax or Other — and a contact can have as many as you need. A new contact starts with a single number and you add more only if you want them, so there are no empty fields to scroll past. When you message or call someone who has more than one number the app asks which to use, and an incoming message or call from any of a contact's numbers now shows their name. Importing from the device or a .vcf file brings every number in with its type, and exporting writes them all back out. Thank you to the user who suggested this.
+
+### Fixed
+- Receiving an MMS no longer crashes the app on Android 16. The part of the bundled messaging library that handles an incoming MMS notification called a system method that newer Android has removed, so the app stopped the moment a picture message arrived. The app now does that step itself and downloads the message as before. Thank you to the user who reported this on a Samsung Galaxy S24 and sent the crash details.
+
+### Changed
+- The file scanner on the home screen is no longer labelled "coming soon". It has been working since 1.9.0, both offline against the on-device signature database and online with a VirusTotal key.
+
 ## 1.9.1
 
 ### Fixed

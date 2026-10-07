@@ -16,7 +16,7 @@
     <string name="copy_number">Copiar número</string>
     <string name="save_to_contacts">Guardar en contactos</string>
     <string name="card_filescan_title">Análisis de archivos</string>
-    <string name="card_filescan_sub">Analiza un archivo en busca de malware (próximamente)</string>
+    <string name="card_filescan_sub">Analiza un archivo en busca de malware</string>
     <string name="card_meta_title">Borrado de metadatos</string>
     <string name="card_meta_sub">Elimina la ubicación y los datos EXIF de una foto</string>
     <string name="card_settings_title">Ajustes</string>
@@ -36,6 +36,9 @@
     <string name="import_device">Importar del dispositivo</string>
     <string name="name_hint">Nombre</string>
     <string name="number_hint">Número</string>
+    <string name="add_number">Añadir otro número</string>
+    <string name="remove_number">Quitar</string>
+    <string name="pick_number">Elige un número</string>
     <string name="about_blurb">DresSecureComms es una app de comunicaciones seguras todo en uno, libre y sin Google. Funciona totalmente sin conexión para SMS y llamadas, sin rastreadores ni servicios de Google. Los mensajes se pueden cifrar entre dos personas que usen esta app, con una clave distinta para cada contacto. También filtra llamadas de spam en el dispositivo y comprueba archivos con VirusTotal mediante su huella, así que nada de lo que analizas se sube nunca.</string>
     <string name="about_website">Sitio web</string>
     <string name="about_donate">Donar en Ko-fi</string>

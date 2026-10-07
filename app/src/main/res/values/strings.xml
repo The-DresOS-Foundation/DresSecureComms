@@ -8,7 +8,7 @@
     <string name="contact_email">security@dresos.org</string>
     <string name="os_url">https://github.com/The-DresOS-Foundation/DresOS-The-Android-Defensive-Security-System</string>
     <string name="about_os">Our Android OS</string>
-    <string name="source_url">https://github.com/DresOperatingSystems/DresSecureComms</string>
+    <string name="source_url">https://github.com/The-DresOS-Foundation/DresSecureComms</string>
 
     <string name="card_messages_title">Messages</string>
     <string name="card_messages_sub">Send and receive SMS, with optional app-to-app encryption</string>
@@ -23,7 +23,7 @@
     <string name="copy_number">Copy number</string>
     <string name="save_to_contacts">Save to contacts</string>
     <string name="card_filescan_title">File Scan</string>
-    <string name="card_filescan_sub">Scan a file for malware (coming soon)</string>
+    <string name="card_filescan_sub">Scan a file for malware</string>
     <string name="card_meta_title">Metadata Wipe</string>
     <string name="card_meta_sub">Strip location and EXIF data from a photo</string>
     <string name="card_settings_title">Settings</string>
@@ -46,6 +46,9 @@
     <string name="import_device">Import from device</string>
     <string name="name_hint">Name</string>
     <string name="number_hint">Number</string>
+    <string name="add_number">Add another number</string>
+    <string name="remove_number">Remove</string>
+    <string name="pick_number">Choose a number</string>
 
     <string name="about_blurb">DresSecureComms is a FOSS, de-Googled, all-in-one secure communications app. It works fully offline for SMS and calls, with no trackers and no Google services. Messages can be encrypted between two people who both use this app, with a separate key for each contact. It also screens spam calls on the device and checks files against VirusTotal by fingerprint, so nothing you scan is ever uploaded.</string>
     <string name="about_website">Website</string>

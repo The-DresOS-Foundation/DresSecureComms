@@ -6,8 +6,13 @@ import android.content.Intent
 import android.os.Bundle
 import android.provider.ContactsContract
 import android.text.InputType
+import android.view.Gravity
+import android.widget.ArrayAdapter
+import android.widget.Button
 import android.widget.EditText
 import android.widget.LinearLayout
+import android.widget.ScrollView
+import android.widget.Spinner
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import com.dresos.dressecurecomms.data.ContactsStore
@@ -49,7 +54,8 @@ class ContactsActivity : AppCompatActivity() {
         b.toolbar.setNavigationOnClickListener { finish() }
 
         adapter = TwoLineAdapter(this, emptyList()) { c ->
-            Triple(c.name, if (c.email.isNotEmpty()) "${c.number}  ·  ${c.email}" else c.number, "")
+            val numLabel = if (c.extras.isEmpty()) c.number else "${c.number}  (+${c.extras.size})"
+            Triple(c.name, if (c.email.isNotEmpty()) "$numLabel  ·  ${c.email}" else numLabel, "")
         }
         b.list.adapter = adapter
         b.list.emptyView = b.empty
@@ -71,7 +77,9 @@ class ContactsActivity : AppCompatActivity() {
         val q = b.search.text?.toString()?.trim()?.lowercase().orEmpty()
         adapter.setItems(
             if (q.isEmpty()) all
-            else all.filter { it.name.lowercase().contains(q) || it.number.lowercase().contains(q) }
+            else all.filter { c ->
+                c.name.lowercase().contains(q) || c.numbers.any { it.number.lowercase().contains(q) }
+            }
         )
     }
 
@@ -132,32 +140,75 @@ class ContactsActivity : AppCompatActivity() {
     }
 
     private fun showForm(existing: ContactsStore.Contact?) {
+        val density = resources.displayMetrics.density
+        val pad = (16 * density).toInt()
+
         val name = EditText(this).apply {
             hint = getString(R.string.name_hint); setText(existing?.name ?: "")
             inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_FLAG_CAP_WORDS
-        }
-        val number = EditText(this).apply {
-            hint = getString(R.string.number_hint); setText(existing?.number ?: "")
-            inputType = InputType.TYPE_CLASS_PHONE
         }
         val email = EditText(this).apply {
             hint = getString(R.string.email_hint); setText(existing?.email ?: "")
             inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_EMAIL_ADDRESS
         }
-        val pad = (16 * resources.displayMetrics.density).toInt()
+
+        // One editable row per number. New contacts start with a single row; more are added on
+        // demand with the button below, so unused number fields are never shown.
+        val numbersBox = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
+        val rows = ArrayList<Pair<EditText, Spinner>>()
+
+        fun addRow(number: String, type: String) {
+            val field = EditText(this).apply {
+                hint = getString(R.string.number_hint); setText(number)
+                inputType = InputType.TYPE_CLASS_PHONE
+                layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
+            }
+            val spinner = Spinner(this).apply {
+                adapter = ArrayAdapter(
+                    this@ContactsActivity, android.R.layout.simple_spinner_item, ContactsStore.TYPES
+                ).also { it.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item) }
+                val idx = ContactsStore.TYPES.indexOf(type)
+                setSelection(if (idx < 0) 0 else idx)
+            }
+            val row = LinearLayout(this).apply {
+                orientation = LinearLayout.HORIZONTAL
+                gravity = Gravity.CENTER_VERTICAL
+                addView(field); addView(spinner)
+            }
+            rows.add(field to spinner)
+            numbersBox.addView(row)
+        }
+
+        val initial = existing?.numbers ?: listOf(ContactsStore.PhoneNumber("", ContactsStore.DEFAULT_TYPE))
+        initial.forEach { addRow(it.number, it.type) }
+
+        val addBtn = Button(this).apply {
+            text = getString(R.string.add_number)
+            setOnClickListener { addRow("", ContactsStore.DEFAULT_TYPE) }
+        }
+
         val wrap = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL; setPadding(pad, pad, pad, 0)
-            addView(name); addView(number); addView(email)
+            addView(name); addView(numbersBox); addView(addBtn); addView(email)
         }
+
         MaterialAlertDialogBuilder(this)
             .setTitle(if (existing == null) R.string.add_contact else R.string.edit_contact)
-            .setView(wrap)
+            .setView(ScrollView(this).apply { addView(wrap) })
             .setPositiveButton(android.R.string.ok) { _, _ ->
                 val n = name.text.toString().trim()
-                val p = number.text.toString().trim()
+                val entered = rows.mapNotNull { (f, s) ->
+                    val num = f.text.toString().trim()
+                    if (num.isEmpty()) null
+                    else ContactsStore.PhoneNumber(
+                        num,
+                        ContactsStore.TYPES.getOrElse(s.selectedItemPosition) { ContactsStore.DEFAULT_TYPE }
+                    )
+                }
                 val e = email.text.toString().trim()
-                if (n.isNotEmpty() && p.isNotEmpty()) {
-                    val updated = ContactsStore.Contact(n, p, e)
+                if (n.isNotEmpty() && entered.isNotEmpty()) {
+                    val primary = entered.first()
+                    val updated = ContactsStore.Contact(n, primary.number, e, primary.type, entered.drop(1))
                     if (existing == null) ContactsStore.add(this, updated)
                     else ContactsStore.update(this, existing, updated)
                     refresh()
@@ -168,23 +219,58 @@ class ContactsActivity : AppCompatActivity() {
     }
 
     private fun importDevice() {
-        val found = ArrayList<ContactsStore.Contact>()
         val cols = arrayOf(
             ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME,
-            ContactsContract.CommonDataKinds.Phone.NUMBER
+            ContactsContract.CommonDataKinds.Phone.NUMBER,
+            ContactsContract.CommonDataKinds.Phone.TYPE
         )
-        contentResolver.query(ContactsContract.CommonDataKinds.Phone.CONTENT_URI, cols, null, null, null)?.use { c ->
+        // Group the device's phone rows by contact name so each person becomes one entry that
+        // keeps all of their numbers, with the device's label mapped to our types.
+        val byName = LinkedHashMap<String, ArrayList<ContactsStore.PhoneNumber>>()
+        contentResolver.query(
+            ContactsContract.CommonDataKinds.Phone.CONTENT_URI, cols, null, null,
+            ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME + " ASC"
+        )?.use { c ->
             val ni = c.getColumnIndexOrThrow(ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME)
             val pi = c.getColumnIndexOrThrow(ContactsContract.CommonDataKinds.Phone.NUMBER)
+            val ti = c.getColumnIndexOrThrow(ContactsContract.CommonDataKinds.Phone.TYPE)
             while (c.moveToNext()) {
                 val n = c.getString(ni) ?: continue
                 val p = c.getString(pi) ?: continue
-                found.add(ContactsStore.Contact(n, p))
+                val label = phoneTypeLabel(c.getInt(ti))
+                val forName = byName.getOrPut(n) { ArrayList() }
+                if (forName.none { it.number == p }) forName.add(ContactsStore.PhoneNumber(p, label))
+            }
+        }
+        val found = byName.mapNotNull { (name, nums) ->
+            if (nums.isEmpty()) null
+            else {
+                val primary = nums.first()
+                ContactsStore.Contact(name, primary.number, "", primary.type, nums.drop(1))
             }
         }
         ContactsStore.addAll(this, found)
         refresh()
         Snackbar.make(b.root, "Imported ${found.size} contacts", Snackbar.LENGTH_LONG).show()
+    }
+
+    private fun phoneTypeLabel(type: Int): String = when (type) {
+        ContactsContract.CommonDataKinds.Phone.TYPE_MOBILE -> "Mobile"
+        ContactsContract.CommonDataKinds.Phone.TYPE_HOME -> "Home"
+        ContactsContract.CommonDataKinds.Phone.TYPE_WORK -> "Work"
+        ContactsContract.CommonDataKinds.Phone.TYPE_FAX_WORK,
+        ContactsContract.CommonDataKinds.Phone.TYPE_FAX_HOME -> "Fax"
+        else -> "Other"
+    }
+
+    private fun pickNumber(c: ContactsStore.Contact, onPick: (String) -> Unit) {
+        val nums = c.numbers
+        if (nums.size <= 1) { onPick(c.number); return }
+        val labels = nums.map { "${it.type}: ${it.number}" }.toTypedArray()
+        MaterialAlertDialogBuilder(this)
+            .setTitle(R.string.pick_number)
+            .setItems(labels) { _, which -> onPick(nums[which].number) }
+            .show()
     }
 
     private fun contactActions(c: ContactsStore.Contact) {
@@ -196,8 +282,12 @@ class ContactsActivity : AppCompatActivity() {
             .setTitle(c.name)
             .setItems(options) { _, which ->
                 when (options[which]) {
-                    "Message" -> startActivity(Intent(this, ThreadActivity::class.java).putExtra("address", c.number))
-                    "Call" -> startActivity(Intent(this, CallsActivity::class.java).putExtra("number", c.number))
+                    "Message" -> pickNumber(c) { num ->
+                        startActivity(Intent(this, ThreadActivity::class.java).putExtra("address", num))
+                    }
+                    "Call" -> pickNumber(c) { num ->
+                        startActivity(Intent(this, CallsActivity::class.java).putExtra("number", num))
+                    }
                     "Email" -> startActivity(
                         Intent.createChooser(
                             Intent(Intent.ACTION_SENDTO, android.net.Uri.parse("mailto:${c.email}")),

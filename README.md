@@ -15,6 +15,12 @@ replacing several separate tools with a single hardened app so that messaging, c
 
 [<img src="https://gitlab.com/IzzyOnDroid/repo/-/raw/master/assets/IzzyOnDroidButtonGreyBorder_nofont.png" height="50">](https://apt.izzysoft.de/packages/com.dresos.dressecurecomms) [<img src="https://raw.githubusercontent.com/ImranR98/Obtainium/main/assets/graphics/badge_obtainium.png" height="50">](https://obtainium.imranr.dev/redirect?url=https://github.com/The-DresOS-Foundation/DresSecureComms/releases/tag/v1.9.0) [<img src="https://img.shields.io/badge/Download-GitHub%20Releases-blue?style=for-the-badge&logo=github" height="50">](https://github.com/The-DresOS-Foundation/DresSecureComms/releases/tag/v1.9.0) [<img src="https://img.shields.io/badge/Zapstore-Download-8B5CF6?style=for-the-badge&logo=android&logoColor=white" height="50">](https://zapstore.dev/apps/com.dresos.dressecurecomms) [<img src="https://img.shields.io/badge/Unclouded-Download-0EA5E9?style=for-the-badge&logo=android&logoColor=white" height="50">](https://unclouded.app/apps/dressecurecomms) [<img src="https://img.shields.io/badge/OpenAPK-Download-16A34A?style=for-the-badge&logo=android&logoColor=white" height="50">](https://www.openapk.net/dressecurecomms/com.dresos.dressecurecomms/) [<img src="https://img.shields.io/badge/AndroidFreeware-Download-F59E0B?style=for-the-badge&logo=android&logoColor=white" height="50">](https://www.androidfreeware.net/download-dressecurecomms-apk.html)
 
+## Donate
+
+> **Help fund future development.** DresOS is built by one person ib his spare time. If our guide, Magisk modules or app saved you a weekend of research, please tip the jar. Funds go to test devices, dev stations, and developer time on updates and future projects.
+
+[![Please Help fund future projects and keep this one going](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/dresos)
+
 ## What it does
 
 - **Messages.** A private SMS client. Send and receive normal texts, or switch on
@@ -117,13 +123,6 @@ DresSecureComms requires SMS, Phone, and Location permissions to act as your sec
 Read our full [Privacy Policy](privacy_policy.md). 
 
 [Security Checks Passed](https://www.virustotal.com/gui/file/2edd01ab8f9024e6718ddb5fd0270c4146fc10cf2d9280ca1d33cfb6ccd99287)
-
-## Donate
-
-> **Help fund future development.** DresOS is built by a small open source team in our spare time. If our guide, Magisk modules or app saved you a weekend of research, please tip the jar. Funds go to test devices, dev stations, and developer time on updates and future projects.
-
-[![Please Help fund future projects and keep this one going](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/dresos)
-
 
 ## Thanks
 
